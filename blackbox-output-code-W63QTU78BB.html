@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Pixel Song Maker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet"> <!-- Pixel font like Undertale -->
+    <style>
+        body {
+            font-family: 'Press Start 2P', monospace; /* Pixel font for Undertale vibe */
+            background-color: #000; /* Black background */
+            color: #fff; /* White text */
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 18px;
+            color: #ffff00; /* Yellow for titles, like Undertale */
+            text-shadow: 2px 2px #000;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #000; /* Black container */
+            border: 2px solid #ffff00; /* Yellow border */
+            padding: 20px;
+            box-shadow: 0 0 10px #ffff00;
+        }
+        .piano {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        .white-key {
+            width: 40px;
+            height: 120px;
+            background-color: #fff; /* White keys */
+            border: 1px solid #000;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 8px;
+            color: #000;
+            position: relative;
+        }
+        .white-key.active {
+            background-color: #ffff00; /* Yellow highlight */
+        }
+        .black-key {
+            width: 25px;
+            height: 80px;
+            background-color: #000; /* Black keys */
+            border: 1px solid #fff;
+            cursor: pointer;
+            position: absolute;
+            top: 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-size: 6px;
+            color: #fff;
+            z-index: 1;
+        }
+        .black-key.active {
+            background-color: #ff0000; /* Red highlight for contrast */
+        }
+        .drum-machine {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .drum-pad {
+            width: 60px;
+            height: 60px;
+            background-color: #333; /* Dark gray */
+            border: 2px solid #ff0000; /* Red border */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            color: #fff;
+        }
+        .drum-pad.active {
+            background-color: #ff0000; /* Red active */
+            color: #000;
+        }
+        .sequencer {
+            display: grid;
+            grid-template-columns: repeat(16, 1fr);
+            gap: 5px;
+            margin: 20px 0;
+        }
+        .step {
+            width: 40px;
+            height: 40px;
+            background-color: #333;
+            border: 1px solid #ffff00; /* Yellow border */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+        }
+        .step.active {
+            background-color: #ffff00; /* Yellow active */
+            color: #000;
+        }
+        .drum-step {
+            width: 40px;
+            height: 20px;
+            background-color: #333;
+            border: 1px solid #ff0000; /* Red border */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6px;
+        }
+        .drum-step.active {
+            background-color: #ff0000; /* Red active */
+            color: #000;
+        }
+        button {
+            background-color: #ffff00; /* Yellow buttons */
+            color: #000;
+            border: 2px solid #000;
+            padding: 10px 20px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 10px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #aaaa00; /* Darker yellow */
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            background-color: #000;
+            color: #fff;
+            border: 1px solid #ffff00;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 8px;
+        }
+        label {
+            display: block;
+            margin: 10px 0;
+            font-size: 10px;
+        }
+        input {
+            margin-left: 10px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #ffff00;
+            font-family: 'Press Start 2P', monospace;
+        }
+        p {
+            font-size: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>RETRO PIXEL SONG MAKER</h1>
+        <p>* Create a song with the virtual piano and drum machine, then generate code for your buzzer!</p>
+        
+        <label for="tempo">TEMPO (BPM): <input type="number" id="tempo" value="120" min="60" max="200"></label>
+        
+        <h2>VIRTUAL PIANO (MELODY)</h2>
+        <div class="piano" id="piano">
+            <!-- Piano keys will be generated by JS -->
+        </div>
+        
+        <h2>VIRTUAL DIGITAL DRUM MACHINE</h2>
+        <div class="drum-machine" id="drumMachine">
+            <!-- Drum pads will be generated by JS -->
+        </div>
+        
+        <h2>16-STEP SEQUENCER</h2>
+        <p>* Click piano keys or drum pads, then click a step below to assign it.</p>
+        <div class="sequencer" id="melodySequencer">
+            <!-- 16 steps will be generated by JS -->
+        </div>
+        <div class="sequencer" id="drumSequencer">
+            <!-- 16 steps will be generated by JS -->
+        </div>
+        
+        <button id="playButton">PLAY SONG</button>
+        <button id="generateCodeButton">GENERATE BUZZER CODE</button>
+        
+        <h2>GENERATED ARDUINO CODE</h2>
+        <textarea id="codeOutput" readonly></textarea>
+    </div>
+
+    <script>
+        const piano = document.getElementById('piano');
+        const drumMachine = document.getElementById('drumMachine');
+        const melodySequencer = document.getElementById('melodySequencer');
+        const drumSequencer = document.getElementById('drumSequencer');
+        const playButton = document.getElementById('playButton');
+        const generateCodeButton = document.getElementById('generateCodeButton');
+        const codeOutput = document.getElementById('codeOutput');
+        const tempoInput = document.getElementById('tempo');
+
+        const notes = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+        const drums = ['Kick', 'Snare', 'HiHat'];
+
+        let currentNote = null;
+        let currentDrum = null;
+        let melodySequence = Array(16).fill(null);
+        let drumSequence = Array(16).fill(null);
+        let audioContext = null; // Initialize once
+
+        // Function to get or create audio context
+        function getAudioContext() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioContext;
+        }
+
+        // Generate piano keys
+        const whiteKeys = ['C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4', 'C5'];
+        const blackKeys = ['C#4', 'D#4', '', 'F#4', 'G#4', 'A#4', ''];
+
+        whiteKeys.forEach((note, index) => {
+            const key = document.createElement('div');
+            key.className = 'white-key';
+            key.textContent = note;
+            key.addEventListener('click', () => {
+                currentNote = note;
+                const ctx = getAudioContext();
+                playTone(ctx, getFrequency(note), 0.5);
+                // Highlight briefly
+                key.classList.add('active');
+                setTimeout(() => key.classList.remove('active'), 200);
+            });
+            piano.appendChild(key);
+
+            // Add black keys between
+            if (blackKeys[index] && blackKeys[index] !== '') {
+                const blackKey = document.createElement('div');
+                blackKey.className = 'black-key';
+                blackKey.textContent = blackKeys[index];
+                blackKey.style.left = `${index * 40 + 30}px`;
+                blackKey.addEventListener('click', () => {
+                    currentNote = blackKeys[index];
+                    const ctx = getAudioContext();
+                    playTone(ctx, getFrequency(blackKeys[index]), 0.5);
+                    blackKey.classList.add('active');
+                    setTimeout(() => blackKey.classList.remove('active'), 200);
+                });
+                piano.appendChild(blackKey);
+            }
+        });
+
+        // Generate drum pads
+        drums.forEach(drum => {
+            const pad = document.createElement('div');
+            pad.className = 'drum-pad';
+            pad.textContent = drum;
+            pad.addEventListener('click', () => {
+                currentDrum = drum;
+                const ctx = getAudioContext();
+                playTone(ctx, drum === 'Kick' ? 60 : drum === 'Snare' ? 200 : 800, 0.2);
+                pad.classList.add('active');
+                setTimeout(() => pad.classList.remove('active'), 200);
+            });
+            drumMachine.appendChild(pad);
+        });
+
+        // Generate sequencer grids
+        for (let i = 0; i < 16; i++) {
+            // Melody
+            const melodyStep = document.createElement('div');
+            melodyStep.className = 'step';
+            melodyStep.textContent = i + 1;
+            melodyStep.addEventListener('click', () => {
+                melodySequence[i] = currentNote;
+                melodyStep.textContent = melodySequence[i] || (i + 1);
+                melodyStep.classList.toggle('active', !!melodySequence[i]);
+            });
+            melodySequencer.appendChild(melodyStep);
+
+            // Drums
+            const drumStep = document.createElement('div');
+            drumStep.className = 'drum-step';
+            drumStep.textContent = i + 1;
+            drumStep.addEventListener('click', () => {
+                drumSequence[i] = currentDrum;
+                drumStep.textContent = drumSequence[i] || (i + 1);
+                drumStep.classList.toggle('active', !!drumSequence[i]);
+            });
+            drumSequencer.appendChild(drumStep);
+        }
+
+        // Play song using Web Audio
+        playButton.addEventListener('click', () => {
+            const ctx = getAudioContext();
+            const bpm = parseInt(tempoInput.value);
+            const stepDuration = 60 / bpm / 4; // 16th notes
+
+            melodySequence.forEach((note, index) => {
+                if (note) {
+                    const freq = getFrequency(note);
+                    playTone(ctx, freq, stepDuration, index * stepDuration);
+                }
+            });
+
+            drumSequence.forEach((drum, index) => {
+                if (drum) {
+                    const freq = drum === 'Kick' ? 60 : drum === 'Snare' ? 200 : 800;
+                    playTone(ctx, freq, stepDuration * 0.5, index * stepDuration);
+                }
+            });
+        });
+
+        function getFrequency(note) {
+            const noteMap = { 'C4': 261.63, 'C#4': 277.18, 'D4': 293.66, 'D#4': 311.13, 'E4': 329.63, 'F4': 349.23, 'F#4': 369.99, 'G4': 392.00, 'G#4': 415.30, 'A4': 440.00, 'A#4': 466.16, 'B4': 493.88, 'C5': 523.25 };
+            return noteMap[note] || 261.63;
+        }
+
+        function playTone(audioContext, frequency, duration, delay = 0) {
+            setTimeout(() => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+                oscillator.type = 'square'; // Retro sound
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + duration);
+            }, delay * 1000);
+        }
+
+        // Generate Arduino code
+        generateCodeButton.addEventListener('click', () => {
+            const bpm = parseInt(tempoInput.value);
+            const stepDuration = Math.round((60 / bpm / 4) * 1000); // ms
+
+            let code = `#include <Arduino.h>
+
+const int buzzerPin = 8; // Connect passive piezo buzzer to pin 8
+
+void setup() {
+    pinMode(buzzerPin, OUTPUT);
+}
+
+void loop() {
+`;
+
+            melodySequence.forEach((note, index) => {
+                if (note) {
+                    const freq = Math.round(getFrequency(note));
+                    code += `    tone(buzzerPin, ${freq}, ${stepDuration});\n`;
+                    code += `    delay(${stepDuration});\n`;
+                } else {
+                    code += `    delay(${stepDuration});\n`;
+                }
+            });
+
+            drumSequence.forEach((drum, index) => {
+                if (drum) {
+                    const freq = drum === 'Kick' ? 60 : drum === 'Snare' ? 200 : 800;
+                    code += `    tone(buzzerPin, ${freq}, ${Math.round(stepDuration * 0.5)});\n`;
+                    code += `    delay(${stepDuration});\n`;
+                } else {
+                    code += `    delay(${stepDuration});\n`;
+                }
+            });
+
+            code += `    delay(1000); // Pause before looping\n}\n`;
+
+            codeOutput.value = code;
+        });
+    </script>
+</body>
+</html>
